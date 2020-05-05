@@ -11,8 +11,8 @@
 % integrated tests
 stations_test_() ->
   {setup,
-    fun() -> pollution_gen_server:start_link(pollution:createMonitor()) end,
-    fun(_) -> pollution_gen_server:close() end,
+    fun() -> pollution_state:start(), pollution_gen_server:start() end,
+    fun(_) -> pollution_gen_server:stop(), pollution_state:stop() end,
     [?_test(addStation()),
       ?_test(addValue()),
       ?_test(getOneValue()),
@@ -42,7 +42,6 @@ getOneValue() ->
   ?assertEqual(30, pollution_gen_server:getOneValue("one", {{20, 13, 2012}, {18, 0, 0}}, "PM10")),
   ?assertEqual(10, pollution_gen_server:getOneValue("two", {{20, 13, 2012}, {12, 0, 0}}, "PM10")),
   ?assertMatch({error, _}, pollution_gen_server:getOneValue("three", {{20, 13, 2012}, {19, 0, 0}}, "PM10")), % nonexistent station
-  %% -- pollution module changed to not throw exception (and instead {error, ...}) while extracting nonexistent value !!
   ?assertMatch({error, _}, pollution_gen_server:getOneValue("two", {{20, 13, 2012}, {100, 0, 0}}, "PM10")). % nonexistent value
 
 removeValue() ->
