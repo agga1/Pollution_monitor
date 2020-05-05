@@ -1,8 +1,11 @@
+%%%-------------------------------------------------------------------
+%% @doc separate process only for keeping state
+%% @end
+%%%-------------------------------------------------------------------
 -module(pollution_state).
 -author("Agnieszka Dutka").
 -behaviour(gen_server).
 
-%%% separate process only for keeping state
 %% API
 -export([init/1, handle_call/3, handle_cast/2, terminate/2]).
 -export([start/0, stop/0]).

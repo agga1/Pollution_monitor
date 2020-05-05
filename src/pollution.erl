@@ -1,3 +1,7 @@
+%%%-------------------------------------------------------------------
+%% @doc pollution monitor implementation
+%% @end
+%%%-------------------------------------------------------------------
 -module(pollution).
 -author("Agnieszka Dutka").
 -record(station, {coords, name, measurements =#{}}).

@@ -1,3 +1,11 @@
+%%%-------------------------------------------------------------------
+%% @doc ------- Pollution server implementation -------
+%% returns {error, _} when database inquiry is not acceptable with current state,
+%% throws error when data format is incorrect.
+%% On crash, supervisor restarts server with last saved state (kept in pollution_state)
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(pollution_gen_server).
 -author("Agnieszka Dutka").
 -behaviour(gen_server).
@@ -5,11 +13,6 @@
 %% API
 -export([start/0, stop/0, crash/0, getMonitor/0, addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getPeakHours/1, mostActiveStation/0]).
 -export([init/1, handle_cast/2, handle_call/3, terminate/2]).
-
-%% ------- Pollution server implementation -------
-%% returns {error, _} when database inquiry is not acceptable with current state,
-%% or throws error when data format is incorrect.
-%% On crash, supervisor restarts server with last saved state (kept in pollution_state)
 
 % retrieves last state from pollution_state and starts server
 start()   ->

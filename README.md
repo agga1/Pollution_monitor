@@ -1,7 +1,6 @@
 pollution
 =====
-
-An OTP application
+OTP application for monitoring pollution levels across multiple stations.
 
 Build
 -----

@@ -30,7 +30,7 @@ init(_) ->
     permanent, 2000, worker, [pollution_gen_server]},
     State = {pollution_state, {pollution_state, start, []},
         permanent, 2000, worker, [pollution_state]},
-    SupFlags = #{strategy => one_for_one,  % changed from one_for_all
+    SupFlags = #{strategy => one_for_one,
     intensity => 5,
     period => 10},
     ChildSpecs = [State, Server],
