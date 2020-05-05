@@ -3,11 +3,11 @@
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).
 %% API
--export([start_link/0, close/0, crash/0, getMonitor/0, addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getPeakHours/1, mostActiveStation/0]).
+-export([start_link/1, close/0, crash/0, getMonitor/0, addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getPeakHours/1, mostActiveStation/0]).
 -export([init/1, handle_cast/2, handle_call/3, terminate/2]).
 
-start_link()   -> gen_server:start_link({local,?SERVER},?MODULE,[],[]).
-init(_) ->   {ok, pollution:createMonitor()}.
+start_link(StartMonitor)   -> gen_server:start_link({local,?SERVER},?MODULE,StartMonitor,[]).
+init(StartMonitor) ->   {ok, StartMonitor}.
 
 getMonitor() -> gen_server:call(?SERVER, getMonitor).
 addStation(Name, Coord) -> gen_server:call(?SERVER, {addStation, Name, Coord}).

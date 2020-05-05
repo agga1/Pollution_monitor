@@ -16,20 +16,20 @@ addStation_test() ->
   M1 = pollution:addStation(M, "ONE", {1, 1}),
   M2 = pollution:addStation(M1,"TWO", {1, 2}),
   ?assertEqual(2, length(M2)),   % 2 stations should be added
-  ?assertMatch({error, illegal_name}, pollution:addStation(M2, 3, {4, 1})),
   ?assertMatch({error, station_exists}, pollution:addStation(M2, "ONE", {2,3})),
   ?assertMatch({error, station_exists}, pollution:addStation(M2, "THREE", {1, 1})),
-  ?assertMatch({error, illegal_coordinates}, pollution:addStation(M2, "THREE", {"2",3})),
-  ?assertMatch({error, illegal_coordinates}, pollution:addStation(M2, "THREE", {1, 2,3})).
+  ?assertThrow( illegal_name, pollution:addStation(M2, 3, {4, 1})),
+  ?assertThrow( illegal_coordinates, pollution:addStation(M2, "THREE", {"2",3})),
+  ?assertThrow( illegal_coordinates, pollution:addStation(M2, "THREE", {1, 2,3})).
 
 addValue_test()->
   M = pollution:createMonitor(),
   M1 = pollution:addStation(M, "ONE", {1, 1}),
   M2 = pollution:addValue(M1, "ONE", {{1, 1, 1}, {1, 1, 1}}, "PM10", 50),
   ?assertMatch({error, station_not_found}, pollution:addValue(M1, "TWO", calendar:local_time(), "PM10", 9) ),
-  ?assertMatch({error, incorrect_datatype}, pollution:addValue(M1, "ONE", {{1, 2, 3}}, "PM10", 9) ),
-  ?assertMatch({error, incorrect_datatype}, pollution:addValue(M1, "ONE", calendar:local_time(), 150, 9) ),
-  ?assertMatch({error, measurement_exists}, pollution:addValue(M2, "ONE", {{1, 1, 1}, {1, 1, 1}}, "PM10", 9) ).
+  ?assertMatch({error, measurement_exists}, pollution:addValue(M2, "ONE", {{1, 1, 1}, {1, 1, 1}}, "PM10", 9) ),
+  ?assertThrow( incorrect_datatype, pollution:addValue(M1, "ONE", {{1, 2, 3}}, "PM10", 9) ),
+  ?assertThrow( incorrect_datatype, pollution:addValue(M1, "ONE", calendar:local_time(), 150, 9) ).
 
 removeValue_test()->
   M = pollution:createMonitor(),

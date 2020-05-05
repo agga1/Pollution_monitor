@@ -14,7 +14,8 @@
 -define(SERVER, ?MODULE).
 
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+    Monitor = pollution:createMonitor(),
+    supervisor:start_link({local, ?SERVER}, ?MODULE, Monitor).
 
 %% sup_flags() = #{strategy => strategy(),         % optional
 %%                 intensity => non_neg_integer(), % optional
@@ -25,12 +26,12 @@ start_link() ->
 %%                  shutdown => shutdown(), % optional
 %%                  type => worker(),       % optional
 %%                  modules => modules()}   % optional
-init([]) ->
-    Server = {pollution_gen_server, {pollution_gen_server, start_link, []},
+init(StartMonitor) ->
+    Server = {pollution, {pollution_gen_server, start_link, [StartMonitor]},
     permanent, 2000, worker, [pollution_gen_server]},
     SupFlags = #{strategy => one_for_one,  % changed from one_for_all
-    intensity => 0,
-    period => 1},
+    intensity => 3,
+    period => 3},
     ChildSpecs = [Server],
     {ok, {SupFlags, ChildSpecs}}.
 

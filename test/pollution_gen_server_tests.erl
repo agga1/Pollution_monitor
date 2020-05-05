@@ -11,7 +11,7 @@
 % integrated tests
 stations_test_() ->
   {setup,
-    fun() -> pollution_gen_server:start_link() end,
+    fun() -> pollution_gen_server:start_link(pollution:createMonitor()) end,
     fun(_) -> pollution_gen_server:close() end,
     [?_test(addStation()),
       ?_test(addValue()),

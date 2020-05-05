@@ -13,8 +13,8 @@
 createMonitor() -> [].
 %% ADDING STATION -----------------------------------------------------------------------
 %% arguments:    (Monitor, Station Name, Station Coordinates)   returns: Monitor with added station
-addStation(_, Name, _) when not ?IS_NAME(Name) -> {error, illegal_name};
-addStation(_, _, Coord) when not ?IS_COORD(Coord) ->{error, illegal_coordinates};
+addStation(_, Name, _) when not ?IS_NAME(Name) -> throw(illegal_name);
+addStation(_, _, Coord) when not ?IS_COORD(Coord) -> throw(illegal_coordinates);
 addStation(Stations, Name, Coord)->
   Found = fun (#station{name = Name1, coords = Coord1}) -> (Name1 == Name) or  (Coord1 == Coord) end,
   case lists:any(Found, Stations) of
@@ -24,7 +24,7 @@ addStation(Stations, Name, Coord)->
 
 %% ADDING MEASUREMENT -----------------------------------------------------------------------
 % adding measurement to given list of measurements Ms
-addMeasurement(_, Date, Type,_)  when not ?IS_DATE_TIME(Date);  not is_list(Type) -> {error, incorrect_datatype};
+addMeasurement(_, Date, Type,_)  when not ?IS_DATE_TIME(Date);  not is_list(Type) -> throw(incorrect_datatype);
 addMeasurement(Ms, Date, Type,Value) ->
   Found = maps:is_key(#measKey{datetime = Date, type = Type}, Ms),
   case Found of
@@ -34,7 +34,7 @@ addMeasurement(Ms, Date, Type,Value) ->
 % searching for station with given Id and modifying its measurements map
 %% arguments:    addValue(Monitor, StationId (Name or Coordinates),  Date, Type, Value),
 %% returns:      modified Monitor (or tuple {error, error_message} )
-addValue(_, Id,  _, _, _) when not ?IS_NAME(Id) and not ?IS_COORD(Id) -> {error, incorrect_id};
+addValue(_, Id,  _, _, _) when not ?IS_NAME(Id) and not ?IS_COORD(Id) -> throw(incorrect_id_format);
 addValue( [], _, _, _, _) -> {error, station_not_found};
 addValue( [ St = #station{name= Name, measurements = Ms} | Stations ], Name, Date, Type, Value) ->
   NewMeasurements = addMeasurement(Ms, Date, Type, Value),
