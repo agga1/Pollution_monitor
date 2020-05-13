@@ -1,4 +1,4 @@
-defmodule Parser do
+defmodule ParserS do
   @moduledoc false
   def parseLine(line) do
     [date, time, lng, lat, value] = String.split(line, ",")
@@ -15,9 +15,10 @@ defmodule Parser do
           |> List.insert_at(2, 0)
           |> List.to_tuple
     },
+      :type => 'PM10',
       :location => {lng |> Float.parse |> elem(0),
-                    lat |> String.to_float},
-      :pollutionLevel => value |> String.to_integer
+                    lat |> Float.parse |> elem(0)},
+      :pollutionLevel => value |> Integer.parse |> elem(0)
     }
   end
 
@@ -27,33 +28,32 @@ defmodule Parser do
           |> Kernel./(1_000_000)
     end
 
-  def loadStations(measurements) do
-        measurements
-        |> Enum.map(fn %{:location => location} -> location end)
-        |> Enum.uniq
+  def loadStations(path) do
+    coords = path |> File.stream!
+             |> Stream.map(&(String.split(&1, ",")))
+             |> Stream.flat_map(fn [_, _, x, y, _] -> [x, y] end)
+             |> Stream.map(&Float.parse/1)
+             |> Stream.map(fn {x, _} -> x end)
+    lon = Stream.take_every(coords, 2)
+    lat = Stream.drop_every(coords, 2)
+    Stream.zip(lon, lat)
+        |> Stream.uniq()
         |> Enum.each(&addStation/1)
   end
 
-  def loadMeasurements(measurements) do
-        measurements |> Enum.each(&addMeasurement/1)
-  end
-
-  def getMeasurements(path) do
-    path
-      |> File.read!
-      |> String.split("\r\n")
-      |> Enum.map(fn e -> Map.put(parseLine(e), :type, 'PM10') end)
+  def loadMeasurements(path) do
+    path  |> File.stream!
+          |> Stream.map(&parseLine/1)
+          |> Enum.each(&addMeasurement/1)
   end
 
   def parse(path) do
-    {prep_time, measurements} = fn -> getMeasurements path end |> :timer.tc
-
     :pollution_sup.start_link()
-    add_stations_time =     measure(fn -> loadStations(measurements) end)
-    add_measurements_time = measure(fn -> loadMeasurements(measurements) end)
+    add_stations_time =     measure(fn -> loadStations(path) end)
+    add_measurements_time = measure(fn -> loadMeasurements(path) end)
 
     IO.puts "Adding times:"
-    IO.puts "stations: #{add_stations_time+prep_time/(1_000_000)}"
+    IO.puts "stations: #{add_stations_time}"
     IO.puts "measurements: #{add_measurements_time}"
 
   end
@@ -73,7 +73,7 @@ defmodule Parser do
   end
 
   def addStation({lng, lat}) do
-    :pollution_gen_server.addStation( 'station_#{lng}_#{lat}', {lng, lat})
+    :pollution_gen_server.addStation('station_#{lng}_#{lat}', {lng, lat})
     end
 
   def addMeasurement(%{:datetime => datetime, :location => location, :type => type, :pollutionLevel => value}) do
