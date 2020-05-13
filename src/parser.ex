@@ -15,9 +15,10 @@ defmodule Parser do
           |> List.insert_at(2, 0)
           |> List.to_tuple
     },
+      :type => 'PM10',
       :location => {lng |> Float.parse |> elem(0),
-                    lat |> String.to_float},
-      :pollutionLevel => value |> String.to_integer
+                    lat |> Float.parse |> elem(0)},
+      :pollutionLevel => value |> Integer.parse |> elem(0)
     }
   end
 
@@ -42,7 +43,7 @@ defmodule Parser do
     path
       |> File.read!
       |> String.split("\r\n")
-      |> Enum.map(fn e -> Map.put(parseLine(e), :type, 'PM10') end)
+      |> Enum.map(&parseLine/1)
   end
 
   def parse(path) do

@@ -67,8 +67,8 @@ defmodule ParserS do
 
     {dm_time, daily_mean} = fn -> :pollution_gen_server.getDailyMean(day, 'PM10') end
                               |> :timer.tc
-    IO.puts "Station mean #{station_mean}\n\ttime: #{sm_time |> Kernel./(1_000_000)}"
-    IO.puts "Daily mean #{daily_mean}\n\ttime: #{dm_time |> Kernel./(1_000_000)}"
+    IO.puts "Station mean #{station_mean}\n\ttime: #{sm_time}"
+    IO.puts "Daily mean #{daily_mean}\n\ttime: #{dm_time}"
 
   end
 
