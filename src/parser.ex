@@ -1,0 +1,82 @@
+defmodule Parser do
+  @moduledoc false
+  def parseLine(line) do
+    [date, time, lng, lat, value] = String.split(line, ",")
+    %{:datetime =>
+      {
+        date
+          |> String.split("-")
+          |> Enum.map(&String.to_integer/1)
+          |> Enum.reverse
+          |> List.to_tuple,
+        time
+          |> String.split(":")
+          |> Enum.map(&String.to_integer/1)
+          |> List.insert_at(2, 0)
+          |> List.to_tuple
+    },
+      :location => {lng |> Float.parse |> elem(0),
+                    lat |> String.to_float},
+      :pollutionLevel => value |> String.to_integer
+    }
+  end
+
+  def measure(func) do
+    func  |> :timer.tc
+          |> elem(0)
+          |> Kernel./(1_000_000)
+    end
+
+  def loadStations(measurements) do
+        measurements |> getUniqueStations |> Enum.each(&addStation/1)
+  end
+
+  def loadMeasurements(measurements) do
+        measurements |> Enum.each(&addMeasurement/1)
+  end
+
+  def parse(path) do
+    measurements = path
+                   |> File.read!
+                   |> String.split("\r\n")
+                   |> Enum.map(fn e -> Map.put(parseLine(e), :type, 'PM10') end)
+
+    :pollution_sup.start_link()
+    add_stations_time =     measure(fn -> loadStations(measurements) end)
+    add_measurements_time = measure(fn -> loadMeasurements(measurements) end)
+
+    IO.puts "Adding times:"
+    IO.puts "stations: #{add_stations_time}"
+    IO.puts "measurements: #{add_measurements_time}"
+
+  end
+
+  def example() do
+    station = {20.06, 49.986}
+    day = {2017, 5, 3}
+
+    {sm_time, station_mean} = fn -> :pollution_gen_server.getStationMean(station, 'PM10') end
+                              |> :timer.tc
+
+    {dm_time, daily_mean} = fn -> :pollution_gen_server.getDailyMean(day, 'PM10') end
+                              |> :timer.tc
+    IO.puts "Station mean #{station_mean}\n\ttime: #{sm_time |> Kernel./(1_000_000)}"
+    IO.puts "Daily mean #{daily_mean}\n\ttime: #{dm_time |> Kernel./(1_000_000)}"
+
+  end
+
+  def getUniqueStations(measurements) do
+    measurements |>
+      Enum.uniq_by(fn %{:location => location} -> location end) |>
+      Enum.map(fn %{:location => location = {lng, lat}} -> {'station_#{lng}_#{lat}', location} end)
+  end
+
+  def addStation({name, location}) do
+    :pollution_gen_server.addStation(name, location)
+    end
+
+  def addMeasurement(%{:datetime => datetime, :location => location, :type => type, :pollutionLevel => value}) do
+    :pollution_gen_server.addValue(location, datetime, type, value)
+  end
+
+end

@@ -21,7 +21,10 @@ handle_call(get, _From, State) -> {reply, State, State};
 handle_call(terminate,_From, State) -> {stop, normal, ok, State}.
 
 handle_cast({update, NewState}, _State) ->
-  {noreply, NewState}.
+  {noreply, NewState};
+
+handle_cast({wipe}, _State) ->
+  {noreply, pollution:createMonitor()}.
 
 terminate(normal, _) -> io:format("---properly terminating state----~n",[]), ok;
 terminate(_, _) -> io:format("Hm, state is terminating. Not good ~n",[]), ok.

@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).
 %% API
--export([start/0, stop/0, crash/0, getMonitor/0, addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getPeakHours/1, mostActiveStation/0]).
+-export([start/0, stop/0, crash/0, getMonitor/0, addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getPeakHours/1, mostActiveStation/0, wipe/0]).
 -export([init/1, handle_cast/2, handle_call/3, terminate/2]).
 
 % retrieves last state from pollution_state and starts server
@@ -33,9 +33,9 @@ getDailyMean(Day, Type) -> gen_server:call(?SERVER,{getDailyMean, Day, Type}).
 getPeakHours(Type) -> gen_server:call(?SERVER,{getPeakHours, Type}).
 mostActiveStation() -> gen_server:call(?SERVER,{mostActiveStation}).
 
-stop()     -> gen_server:call(?SERVER,terminate).
-crash()     -> gen_server:cast(?SERVER,crash).
-
+stop()    -> gen_server:call(?SERVER,terminate).
+crash()   -> gen_server:cast(?SERVER,crash).
+wipe()    -> gen_server:cast(?SERVER, wipe).
 
 safe_return(NewMonitor, Monitor)->
   case NewMonitor of
@@ -46,7 +46,11 @@ safe_return(NewMonitor, Monitor)->
   end.
 
 %% --------- handling messages -----------%%
-handle_cast(crash, Monitor) -> no:exist(), {noreply, Monitor}.
+handle_cast(crash, Monitor) -> no:exist(), {noreply, Monitor};
+
+%% wipes memory and cache
+handle_cast(wipe, _) ->  gen_server:cast(pollution_state, {wipe}),
+  {noreply, gen_server:call(pollution_state, get)}.
 
 % waiting for result anyway, to know the outcome of the operation
 handle_call({addStation, Name, Coord}, _From, Monitor) ->
